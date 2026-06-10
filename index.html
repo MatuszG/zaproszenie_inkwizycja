@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Natalia &amp; Mateusz</title>
+  <title>Natalia &amp; Mateusz — zaproszenie</title>
+  <meta property="og:title" content="Natalia &amp; Mateusz — zaproszenie ślubne">
+  <meta property="og:description" content="Kliknij, by otworzyć zaproszenie">
+  <meta property="og:type" content="website">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,7 +21,6 @@
       overflow-x: hidden;
     }
 
-    /* ── petals ── */
     .petal {
       position: fixed;
       width: 8px; height: 14px;
@@ -27,18 +29,6 @@
       z-index: 0;
     }
 
-    /* ── names ── */
-    #names {
-      margin-top: 24px;
-      text-align: center;
-      position: relative;
-      z-index: 10;
-      transition: opacity 0.4s;
-    }
-    #names .script { font-size: 26px; color: #8a6a1f; font-style: italic; letter-spacing: 0.05em; }
-    #names .date { font-size: 11px; color: #b8985a; letter-spacing: 0.22em; margin-top: 8px; font-family: sans-serif; text-transform: uppercase; }
-
-    /* ── hint ── */
     #hint {
       margin-top: 16px;
       font-size: 11px; color: #b8985a;
@@ -49,7 +39,6 @@
       position: relative;
     }
 
-    /* ── envelope ── */
     #envelope-wrap {
       position: relative;
       width: 340px;
@@ -86,7 +75,6 @@
       pointer-events: none;
     }
 
-    /* ── booklet view ── */
     #booklet-wrap {
       display: none;
       flex-direction: column;
@@ -98,67 +86,53 @@
       position: relative;
     }
 
-    /* ── cover flip ── */
-    #cover-flip-area {
-      width: min(600px, 96vw);
-      position: relative;
-    }
-
-    #cover-container {
+    #cover-stage {
       perspective: 1400px;
-      width: 100%;
+      width: min(380px, 92vw);
     }
-
     #cover-page {
       width: 100%;
-      background: #fffdf7;
       border: 1px solid #c9a84c;
       border-radius: 4px;
       cursor: pointer;
       transform-origin: left center;
       transform: rotateY(0deg);
-      transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+      transition: transform 0.7s cubic-bezier(0.4,0,0.2,1);
       backface-visibility: hidden;
-      position: relative;
-      z-index: 10;
       overflow: hidden;
+      background: #fffdf7;
+      position: relative;
     }
-    #cover-page.opened {
-      transform: rotateY(-178deg);
-      pointer-events: none;
-      box-shadow: none;
-    }
+    #cover-page.opened { transform: rotateY(-160deg); pointer-events: none; }
     #cover-page canvas { display: block; width: 100%; height: auto; }
 
     #cover-hint {
-      position: absolute;
-      bottom: 12px; right: 14px;
+      text-align: center;
+      margin-top: 12px;
       font-size: 10px; color: #c9a84c;
       letter-spacing: 0.15em; text-transform: uppercase;
       font-family: sans-serif;
       transition: opacity 0.3s;
-      z-index: 11;
     }
-    #cover-page.opened + #cover-hint { opacity: 0; }
 
-    /* ── inner spread ── */
+    #spread-stage {
+      display: none;
+      width: min(760px, 96vw);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    #spread-stage.visible { opacity: 1; }
     #inner-spread {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
       display: flex;
       border: 1px solid #c9a84c;
       border-radius: 4px;
       overflow: hidden;
       background: #fffdf7;
-      z-index: 5;
     }
     .gold-bar { width: 3px; background: #c9a84c; flex-shrink: 0; }
     .inner-page { flex: 1; overflow: hidden; }
     .inner-page canvas { display: block; width: 100%; height: auto; }
-    #spread-divider { width: 1px; background: #e8d9b0; flex-shrink: 0; }
 
-    /* ── back button ── */
     #back-btn {
       font-size: 11px; color: #b8985a;
       background: none; border: 1px solid #d4b870;
@@ -169,7 +143,6 @@
     }
     #back-btn:hover { color: #8a6a1f; border-color: #c9a84c; }
 
-    /* ── loading ── */
     #loading {
       position: fixed; inset: 0;
       background: #fdf8f2;
@@ -183,6 +156,19 @@
     @keyframes pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
     .loading-text { font-size: 11px; color: #b8985a; letter-spacing: 0.2em; text-transform: uppercase; font-family: sans-serif; }
 
+    #error-box {
+      display: none;
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #9a6a3a;
+      line-height: 1.8;
+      padding: 16px;
+      z-index: 10;
+      position: relative;
+    }
+    #error-box a { color: #8a6a1f; }
+
     @media (max-width: 500px) {
       #envelope-wrap { width: 290px; }
       #envelope-body { width: 290px; height: 196px; }
@@ -190,6 +176,10 @@
       .env-side-r { border-top-width: 98px; border-bottom-width: 98px; border-right-width: 119px; }
       .env-bottom { border-left-width: 145px; border-right-width: 145px; border-bottom-width: 98px; }
       #flap { width: 292px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #flap, #cover-page, #spread-stage, #seal { transition: none !important; }
     }
   </style>
 </head>
@@ -203,6 +193,11 @@
       <text x="24" y="31" text-anchor="middle" font-size="8" fill="#c9a84c" font-family="Georgia,serif" font-style="italic">&amp; M</text>
     </svg>
     <div class="loading-text">ładowanie zaproszenia…</div>
+  </div>
+
+  <div id="error-box">
+    Nie udało się wczytać zaproszenia.<br>
+    <a href="zaproszenie.pdf">Otwórz PDF bezpośrednio</a>
   </div>
 
   <div id="envelope-wrap" onclick="openEnvelope()">
@@ -225,26 +220,24 @@
     </div>
   </div>
 
-  <div id="names">
-    <div class="script">Natalia &amp; Mateusz</div>
-    <div class="date">05 · IX · 2026</div>
-  </div>
   <div id="hint">kliknij kopertę, by otworzyć</div>
 
   <div id="booklet-wrap">
-    <div id="cover-flip-area">
-      <div id="inner-spread">
-        <div class="gold-bar"></div>
-        <div class="inner-page" id="page-spread" style="flex:1;"></div>
-        <div class="gold-bar"></div>
-      </div>
-      <div id="cover-container">
-        <div id="cover-page" onclick="openCover()">
-          <div id="page-cover"></div>
-        </div>
+    <div id="cover-stage">
+      <div id="cover-page" onclick="openCover()">
+        <div id="page-cover"></div>
       </div>
       <div id="cover-hint">kliknij okładkę, by otworzyć</div>
     </div>
+
+    <div id="spread-stage">
+      <div id="inner-spread">
+        <div class="gold-bar"></div>
+        <div class="inner-page" id="page-spread"></div>
+        <div class="gold-bar"></div>
+      </div>
+    </div>
+
     <button id="back-btn" onclick="closeAll()">&#8592; zamknij zaproszenie</button>
   </div>
 
@@ -252,6 +245,7 @@
   <script>
     const PDF_PATH = 'zaproszenie.pdf';
     const SCALE = 2;
+    const CROP_PX = 30;
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -269,77 +263,90 @@
       document.body.appendChild(p);
     }
 
-    async function renderPage(pdf, pageNum, container) {
+    async function renderRegion(pdf, pageNum, container, region) {
       const page = await pdf.getPage(pageNum);
       const viewport = page.getViewport({ scale: SCALE });
+      const c = CROP_PX * SCALE;
+
+      let sx, sw;
+      if (region === 'right-half') {
+        sx = viewport.width / 2;
+        sw = viewport.width / 2 - c;
+      } else {
+        sx = c;
+        sw = viewport.width - c * 2;
+      }
+      const sy = c;
+      const sh = viewport.height - c * 2;
+
       const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      canvas.width = sw;
+      canvas.height = sh;
+
+      const ctx = canvas.getContext('2d');
+      ctx.translate(-sx, -sy);
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
       container.appendChild(canvas);
     }
 
     async function init() {
       try {
         const pdf = await pdfjsLib.getDocument(PDF_PATH).promise;
-        const totalPages = pdf.numPages;
-
-        await renderPage(pdf, 1, document.getElementById('page-cover'));
-        if (totalPages >= 2) await renderPage(pdf, 2, document.getElementById('page-spread'));
-
-        syncSpreadHeight();
+        await renderRegion(pdf, 1, document.getElementById('page-cover'), 'right-half');
+        if (pdf.numPages >= 2) {
+          await renderRegion(pdf, 2, document.getElementById('page-spread'), 'full');
+        }
       } catch (e) {
         console.error('PDF load error:', e);
+        document.getElementById('envelope-wrap').style.display = 'none';
+        document.getElementById('hint').style.display = 'none';
+        document.getElementById('error-box').style.display = 'block';
       }
       document.getElementById('loading').classList.add('hidden');
     }
 
-    function syncSpreadHeight() {
-      const cover = document.getElementById('cover-page');
-      const spread = document.getElementById('inner-spread');
-      const h = cover.offsetHeight;
-      if (h > 0) spread.style.height = h + 'px';
-    }
-
     window.openEnvelope = function() {
       document.getElementById('flap').style.transform = 'rotateX(-170deg)';
-      document.getElementById('seal').style.cssText += 'opacity:0;transform:translate(-50%,-50%) scale(0.6)';
+      document.getElementById('seal').style.opacity = '0';
       document.getElementById('hint').style.opacity = '0';
-      document.getElementById('names').style.opacity = '0';
       setTimeout(() => {
         document.getElementById('envelope-wrap').style.display = 'none';
-        document.getElementById('names').style.display = 'none';
         document.getElementById('hint').style.display = 'none';
         document.getElementById('booklet-wrap').style.display = 'flex';
-        syncSpreadHeight();
-      }, 500);
+      }, 520);
     };
 
     window.openCover = function() {
-      document.getElementById('cover-page').classList.add('opened');
+      const cover = document.getElementById('cover-page');
+      cover.classList.add('opened');
       document.getElementById('cover-hint').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('cover-stage').style.display = 'none';
+        const spread = document.getElementById('spread-stage');
+        spread.style.display = 'block';
+        requestAnimationFrame(() => spread.classList.add('visible'));
+      }, 420);
     };
 
     window.closeAll = function() {
       document.getElementById('booklet-wrap').style.display = 'none';
+      document.getElementById('cover-stage').style.display = '';
       document.getElementById('cover-page').classList.remove('opened');
       document.getElementById('cover-hint').style.opacity = '1';
-      const env = document.getElementById('envelope-wrap');
-      const names = document.getElementById('names');
-      const hint = document.getElementById('hint');
-      env.style.display = '';
-      names.style.display = '';
-      hint.style.display = '';
+      const spread = document.getElementById('spread-stage');
+      spread.classList.remove('visible');
+      spread.style.display = 'none';
+      document.getElementById('envelope-wrap').style.display = '';
+      document.getElementById('hint').style.display = '';
       setTimeout(() => {
         document.getElementById('flap').style.transform = 'rotateX(0deg)';
-        document.getElementById('seal').style.cssText = document.getElementById('seal').style.cssText.replace('opacity:0;transform:translate(-50%,-50%) scale(0.6)', '');
+        document.getElementById('seal').style.opacity = '1';
         document.getElementById('hint').style.opacity = '1';
-        document.getElementById('names').style.opacity = '1';
       }, 50);
     };
 
     window.addEventListener('load', init);
-    window.addEventListener('resize', syncSpreadHeight);
   </script>
 </body>
 </html>
