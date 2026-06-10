@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Natalia &amp; Mateusz</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #fdf8f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, 'Times New Roman', serif;
+      overflow-x: hidden;
+    }
+
+    /* ── petals ── */
+    .petal {
+      position: fixed;
+      width: 8px; height: 14px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── names ── */
+    #names {
+      margin-top: 24px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      transition: opacity 0.4s;
+    }
+    #names .script { font-size: 26px; color: #8a6a1f; font-style: italic; letter-spacing: 0.05em; }
+    #names .date { font-size: 11px; color: #b8985a; letter-spacing: 0.22em; margin-top: 8px; font-family: sans-serif; text-transform: uppercase; }
+
+    /* ── hint ── */
+    #hint {
+      margin-top: 16px;
+      font-size: 11px; color: #b8985a;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      font-family: sans-serif;
+      transition: opacity 0.4s;
+      z-index: 10;
+      position: relative;
+    }
+
+    /* ── envelope ── */
+    #envelope-wrap {
+      position: relative;
+      width: 340px;
+      cursor: pointer;
+      z-index: 10;
+      perspective: 1000px;
+    }
+    #envelope-body {
+      width: 340px; height: 230px;
+      background: #fffdf7;
+      border: 1px solid #c9a84c;
+      border-radius: 3px;
+      position: relative;
+    }
+    .env-side-l { position: absolute; top:0; left:0; width:0; height:0; border-top:115px solid transparent; border-bottom:115px solid transparent; border-left:140px solid #f5edd8; }
+    .env-side-r { position: absolute; top:0; right:0; width:0; height:0; border-top:115px solid transparent; border-bottom:115px solid transparent; border-right:140px solid #f0e6cc; }
+    .env-bottom { position: absolute; bottom:0; left:0; width:0; height:0; border-left:170px solid transparent; border-right:170px solid transparent; border-bottom:115px solid #f7eedb; }
+
+    #flap {
+      position: absolute; top:-1px; left:-1px; width:342px;
+      transform-origin: top center;
+      transform: rotateX(0deg);
+      transition: transform 0.65s cubic-bezier(0.4,0,0.2,1);
+      z-index: 20;
+    }
+    #envelope-wrap:hover #flap { transform: rotateX(-170deg); }
+    #envelope-wrap:hover #seal { opacity:0; transform: translate(-50%,-50%) scale(0.6); }
+
+    #seal {
+      position: absolute; top:50%; left:50%;
+      transform: translate(-50%,-50%);
+      width:50px; height:50px; z-index:30;
+      transition: opacity 0.35s, transform 0.35s;
+      pointer-events: none;
+    }
+
+    /* ── booklet view ── */
+    #booklet-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      padding: 32px 16px 48px;
+      z-index: 10;
+      position: relative;
+    }
+
+    /* ── cover flip ── */
+    #cover-flip-area {
+      width: min(600px, 96vw);
+      position: relative;
+    }
+
+    #cover-container {
+      perspective: 1400px;
+      width: 100%;
+    }
+
+    #cover-page {
+      width: 100%;
+      background: #fffdf7;
+      border: 1px solid #c9a84c;
+      border-radius: 4px;
+      cursor: pointer;
+      transform-origin: left center;
+      transform: rotateY(0deg);
+      transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+      backface-visibility: hidden;
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+    }
+    #cover-page.opened {
+      transform: rotateY(-178deg);
+      pointer-events: none;
+      box-shadow: none;
+    }
+    #cover-page canvas { display: block; width: 100%; height: auto; }
+
+    #cover-hint {
+      position: absolute;
+      bottom: 12px; right: 14px;
+      font-size: 10px; color: #c9a84c;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      font-family: sans-serif;
+      transition: opacity 0.3s;
+      z-index: 11;
+    }
+    #cover-page.opened + #cover-hint { opacity: 0; }
+
+    /* ── inner spread ── */
+    #inner-spread {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      display: flex;
+      border: 1px solid #c9a84c;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fffdf7;
+      z-index: 5;
+    }
+    .gold-bar { width: 3px; background: #c9a84c; flex-shrink: 0; }
+    .inner-page { flex: 1; overflow: hidden; }
+    .inner-page canvas { display: block; width: 100%; height: auto; }
+    #spread-divider { width: 1px; background: #e8d9b0; flex-shrink: 0; }
+
+    /* ── back button ── */
+    #back-btn {
+      font-size: 11px; color: #b8985a;
+      background: none; border: 1px solid #d4b870;
+      padding: 8px 20px; border-radius: 2px;
+      cursor: pointer; letter-spacing: 0.15em;
+      text-transform: uppercase; font-family: sans-serif;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    #back-btn:hover { color: #8a6a1f; border-color: #c9a84c; }
+
+    /* ── loading ── */
+    #loading {
+      position: fixed; inset: 0;
+      background: #fdf8f2;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+      z-index: 100;
+      transition: opacity 0.5s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    .loading-seal { width: 48px; height: 48px; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
+    .loading-text { font-size: 11px; color: #b8985a; letter-spacing: 0.2em; text-transform: uppercase; font-family: sans-serif; }
+
+    @media (max-width: 500px) {
+      #envelope-wrap { width: 290px; }
+      #envelope-body { width: 290px; height: 196px; }
+      .env-side-l { border-top-width: 98px; border-bottom-width: 98px; border-left-width: 119px; }
+      .env-side-r { border-top-width: 98px; border-bottom-width: 98px; border-right-width: 119px; }
+      .env-bottom { border-left-width: 145px; border-right-width: 145px; border-bottom-width: 98px; }
+      #flap { width: 292px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading">
+    <svg class="loading-seal" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="22" fill="#faf3e2" stroke="#c9a84c" stroke-width="1.2"/>
+      <circle cx="24" cy="24" r="16" fill="none" stroke="#e8d4a0" stroke-width="0.5"/>
+      <text x="24" y="21" text-anchor="middle" font-size="8" fill="#c9a84c" font-family="Georgia,serif" font-style="italic">N</text>
+      <text x="24" y="31" text-anchor="middle" font-size="8" fill="#c9a84c" font-family="Georgia,serif" font-style="italic">&amp; M</text>
+    </svg>
+    <div class="loading-text">ładowanie zaproszenia…</div>
+  </div>
+
+  <div id="envelope-wrap" onclick="openEnvelope()">
+    <div id="envelope-body">
+      <div class="env-side-l"></div>
+      <div class="env-side-r"></div>
+      <div class="env-bottom"></div>
+      <div id="flap">
+        <svg width="342" height="150" viewBox="0 0 342 150" fill="none">
+          <path d="M0 2 L171 138 L342 2 Z" fill="#faf3e2" stroke="#c9a84c" stroke-width="1"/>
+          <path d="M20 2 L171 120 L322 2" fill="none" stroke="#e8d4a0" stroke-width="0.5" opacity="0.6"/>
+        </svg>
+      </div>
+      <svg id="seal" viewBox="0 0 50 50" fill="none">
+        <circle cx="25" cy="25" r="22" fill="#faf3e2" stroke="#c9a84c" stroke-width="1.2"/>
+        <circle cx="25" cy="25" r="17" fill="none" stroke="#e8d4a0" stroke-width="0.5"/>
+        <text x="25" y="22" text-anchor="middle" font-size="9" fill="#c9a84c" font-family="Georgia,serif" font-style="italic">N</text>
+        <text x="25" y="33" text-anchor="middle" font-size="9" fill="#c9a84c" font-family="Georgia,serif" font-style="italic">&amp; M</text>
+      </svg>
+    </div>
+  </div>
+
+  <div id="names">
+    <div class="script">Natalia &amp; Mateusz</div>
+    <div class="date">05 · IX · 2026</div>
+  </div>
+  <div id="hint">kliknij kopertę, by otworzyć</div>
+
+  <div id="booklet-wrap">
+    <div id="cover-flip-area">
+      <div id="inner-spread">
+        <div class="gold-bar"></div>
+        <div class="inner-page" id="page-spread" style="flex:1;"></div>
+        <div class="gold-bar"></div>
+      </div>
+      <div id="cover-container">
+        <div id="cover-page" onclick="openCover()">
+          <div id="page-cover"></div>
+        </div>
+      </div>
+      <div id="cover-hint">kliknij okładkę, by otworzyć</div>
+    </div>
+    <button id="back-btn" onclick="closeAll()">&#8592; zamknij zaproszenie</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const PDF_PATH = 'zaproszenie.pdf';
+    const SCALE = 2;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const colors = ['#c9a84c','#e8b4b8','#d4a574','#b8985a','#e2c990'];
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.style.cssText =
+        'left:' + (Math.random()*100) + 'vw;' +
+        'top:' + (Math.random()*100) + 'vh;' +
+        'background:' + colors[i % colors.length] + ';' +
+        'transform:rotate(' + (Math.random()*360) + 'deg);' +
+        'opacity:' + (0.06 + Math.random()*0.1).toFixed(2);
+      document.body.appendChild(p);
+    }
+
+    async function renderPage(pdf, pageNum, container) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: SCALE });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      container.appendChild(canvas);
+    }
+
+    async function init() {
+      try {
+        const pdf = await pdfjsLib.getDocument(PDF_PATH).promise;
+        const totalPages = pdf.numPages;
+
+        await renderPage(pdf, 1, document.getElementById('page-cover'));
+        if (totalPages >= 2) await renderPage(pdf, 2, document.getElementById('page-spread'));
+
+        syncSpreadHeight();
+      } catch (e) {
+        console.error('PDF load error:', e);
+      }
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    function syncSpreadHeight() {
+      const cover = document.getElementById('cover-page');
+      const spread = document.getElementById('inner-spread');
+      const h = cover.offsetHeight;
+      if (h > 0) spread.style.height = h + 'px';
+    }
+
+    window.openEnvelope = function() {
+      document.getElementById('flap').style.transform = 'rotateX(-170deg)';
+      document.getElementById('seal').style.cssText += 'opacity:0;transform:translate(-50%,-50%) scale(0.6)';
+      document.getElementById('hint').style.opacity = '0';
+      document.getElementById('names').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('envelope-wrap').style.display = 'none';
+        document.getElementById('names').style.display = 'none';
+        document.getElementById('hint').style.display = 'none';
+        document.getElementById('booklet-wrap').style.display = 'flex';
+        syncSpreadHeight();
+      }, 500);
+    };
+
+    window.openCover = function() {
+      document.getElementById('cover-page').classList.add('opened');
+      document.getElementById('cover-hint').style.opacity = '0';
+    };
+
+    window.closeAll = function() {
+      document.getElementById('booklet-wrap').style.display = 'none';
+      document.getElementById('cover-page').classList.remove('opened');
+      document.getElementById('cover-hint').style.opacity = '1';
+      const env = document.getElementById('envelope-wrap');
+      const names = document.getElementById('names');
+      const hint = document.getElementById('hint');
+      env.style.display = '';
+      names.style.display = '';
+      hint.style.display = '';
+      setTimeout(() => {
+        document.getElementById('flap').style.transform = 'rotateX(0deg)';
+        document.getElementById('seal').style.cssText = document.getElementById('seal').style.cssText.replace('opacity:0;transform:translate(-50%,-50%) scale(0.6)', '');
+        document.getElementById('hint').style.opacity = '1';
+        document.getElementById('names').style.opacity = '1';
+      }, 50);
+    };
+
+    window.addEventListener('load', init);
+    window.addEventListener('resize', syncSpreadHeight);
+  </script>
+</body>
+</html>
